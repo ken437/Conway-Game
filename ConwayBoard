@@ -1,1 +1,210 @@
+package conwayGame;
 
+import java.awt.Color;
+
+/**
+ * Represents a Conway Game of Life grid
+ *
+ * @author kenneth
+ * @version 9/25/2019
+ *
+ */
+public class ConwayBoard {
+
+    ConwaySquare[][] boardArray;
+    /**
+     * The default width of the board, in tiles
+     */
+    public static final int DEFAULT_WIDTH = 190;
+    /**
+     * The default height of the board, in tiles
+     */
+    public static final int DEFAULT_HEIGHT = 96;
+    private int width;
+    private int height;
+
+    /**
+     * Gives the board the default size and fills it with
+     * dead tiles
+     */
+    public ConwayBoard()
+    {
+        this(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    }
+
+    /**
+     * Gives the board a user-provided size and
+     * fills it with dead tiles
+     *
+     * @param width the width of the board in tiles
+     * @param height the height of the board in tiles
+     */
+    public ConwayBoard(int width, int height)
+    {
+        this.width = width;
+        this.height = height;
+        boardArray = new ConwaySquare[width][height];
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                boardArray[i][j] = new ConwaySquare(i, j,
+                    ConwayWindow.SQUARE_SIZE, Color.white, this);
+            }
+        }
+    }
+
+    /**
+     * Converts this board to a String
+     *
+     * @return a String representation of this board, with newline characters
+     * to symbolize a new row
+     */
+    public String toString()
+    {
+        String output = "";
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                output += boardArray[i][j].toString();
+            }
+            //new row
+            output += "\n";
+        }
+        return output;
+    }
+
+    /**
+     * Converts this board to a String, where each alive square is a
+     * user-input character and each dead square is a space
+     *
+     * @param aliveTiles the character the user wants each alive tile to be
+     *
+     * @return a String representation of this board, with newline characters
+     * to symbolize a new row
+     */
+    public String customizedString(char aliveTiles)
+    {
+        String output = "";
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                //if this square is alive:
+                if (boardArray[i][j].getState())
+                {
+                    output += aliveTiles;
+                }
+                //if this square is dead:
+                else
+                {
+                    output += " ";
+                }
+            }
+            //new row
+            output += "\n";
+        }
+        return output;
+    }
+
+    /**
+     * Returns the 2D array internally storing the squares
+     *
+     * @return the 2D array field boardArray
+     */
+    public ConwaySquare[][] getBoardArray()
+    {
+        return boardArray;
+    }
+
+    /**
+     * The width of this board
+     *
+     * @return the width of this board in tiles
+     */
+    public int width()
+    {
+        return this.width;
+    }
+
+    /**
+     * The height of this board
+     *
+     * @return the height of this board in tiles
+     */
+    public int height()
+    {
+        return this.height;
+    }
+
+    /**
+     * Creates a copy of this board, and returns that copy
+     *
+     * @return a new ConwayBoard that is a copy of this one
+     */
+    public ConwayBoard copy()
+    {
+        ConwayBoard copy = new ConwayBoard(this.width, this.height);
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                //puts a copy of this tile into the new board
+                copy.getBoardArray()[i][j] = boardArray[i][j].copy(copy);
+            }
+        }
+        return copy;
+    }
+
+    /**
+     * Looks at and attempts to update every Tile on the board,
+     * according to the rules of the game of life.
+     * All terms for what each situation is called came from the
+     * Conway's Game of Life wiki (yes, that exists).
+     *
+     * @return the new board that results after the tick has occurred
+     */
+    public ConwayBoard tick()
+    {
+//        ConwayBoard copy = this.copy();
+        //copy starts out with all dead tiles
+        ConwayBoard copy = new ConwayBoard(width, height);
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                ConwaySquare originalSquare = this.getBoardArray()[i][j];
+                ConwaySquare copySquare = copy.getBoardArray()[i][j];
+                int aliveNeighbors = originalSquare.tallyAliveNeighbors();
+//                //underpopulation/exposure
+//                if (aliveNeighbors < 2)
+//                {
+//                    copySquare.setState(false);
+//                }
+//                //overpopulation/overcrowding
+//                else if (aliveNeighbors > 3)
+//                {
+//                    copySquare.setState(false);
+//                }
+//                else if (aliveNeighbors == 3)
+//                {
+//                    copySquare.setState(true);
+//                }
+
+                //if original square is alive and has two alive neighbors
+                if (originalSquare.getState() && aliveNeighbors == 2)
+                {
+                    copySquare.setState(true);
+                }
+                // if original square has three alive neighbors
+                else if (aliveNeighbors == 3)
+                {
+                    copySquare.setState(true);
+                }
+            }
+        }
+        return copy;
+    }
+
+}

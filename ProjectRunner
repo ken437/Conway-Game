@@ -1,1 +1,26 @@
+package conwayGame;
 
+/**
+ * Contains this project's main method
+ *
+ * @author kenneth
+ * @version 10/4/2019
+ *
+ */
+public class ProjectRunner {
+
+    /**
+     * Activates when the app is run
+     *
+     * @param args currently has no effect
+     */
+    public static void main(String[] args)
+    {
+        //deciding which board to run
+        ConwayBoard boardToRun = ConwayWindow.randomBoard();
+        //making a Window object
+        ConwayWindow window = new ConwayWindow(boardToRun);
+        //displaying the board
+        window.displayBoard();
+    }
+}

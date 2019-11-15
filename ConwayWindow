@@ -1,1 +1,609 @@
+package conwayGame;
 
+import CS2114.Window;
+import java.util.Random;
+import CS2114.WindowSide;
+import CS2114.Button;
+
+/**
+ * A window that displays the ConwayBoards as black and white squares
+ * and has various buttons allowing the user to interact with the
+ * board
+ *
+ * @author kenneth
+ * @version 9/30/2019
+ *
+ */
+public class ConwayWindow extends Window {
+
+    /**
+     * Side length of each square
+     */
+    public static final int SQUARE_SIZE = 20;
+
+    private static ConwayBoard blank;
+    private static ConwayBoard random;
+    private static ConwayBoard tenWide;
+    private static ConwayBoard gliders;
+    private static ConwayBoard spaceship;
+    private static ConwayBoard diagonal;
+    private static ConwayBoard gun;
+    private static ConwayBoard methuselah;
+
+    private Button step;
+    private Button pause;
+    private Button unpause;
+    private Button reset;
+    private Button changeBoard;
+    private Button back;
+    //the following buttons are all used to change
+    //the board to a new pattern
+    private Button blankButton;
+    private Button randomButton;
+    private Button tenWideButton;
+    private Button glidersButton;
+    private Button spaceshipButton;
+    private Button diagonalButton;
+    private Button gunButton;
+    private Button methuselahButton;
+
+    private ConwayBoard board;
+    private ConwayBoard displayedBoard;
+    //not final because the board preset buttons can change this field
+    private ConwayBoard originalBoard;
+    private ContinuallyTicking thread;
+
+    //initialize all the static board fields
+    static
+    {
+        //creating blank
+        blank = new ConwayBoard();
+        //creating random
+        random = ConwayWindow.newRandom();
+        //creating gliders
+        gliders = new ConwayBoard();
+        //filling in gliders
+        for (int i = 0; i < 5; i++)
+        {
+            gliders.getBoardArray()[2 + 7 * i][1 + 7 * i].setState(true);
+            gliders.getBoardArray()[3 + 7 * i][2 + 7 * i].setState(true);
+            gliders.getBoardArray()[3 + 7 * i][3 + 7 * i].setState(true);
+            gliders.getBoardArray()[2 + 7 * i][3 + 7 * i].setState(true);
+            gliders.getBoardArray()[1 + 7 * i][3 + 7 * i].setState(true);
+        }
+        //creating tenWide
+        tenWide = new ConwayBoard();
+        for (int i = 11; i < 21; i++)
+            tenWide.getBoardArray()[15][i].setState(true);
+        //creating spaceship
+        spaceship = new ConwayBoard();
+        //the spaceship
+        for (int i = 0; i < 5; i++)
+        {
+            spaceship.getBoardArray()[2 + 8 * i][1].setState(true);
+            spaceship.getBoardArray()[1 + 8 * i][2].setState(true);
+            spaceship.getBoardArray()[1 + 8 * i][3].setState(true);
+            spaceship.getBoardArray()[1 + 8 * i][4].setState(true);
+            spaceship.getBoardArray()[2 + 8 * i][4].setState(true);
+            spaceship.getBoardArray()[3 + 8 * i][4].setState(true);
+            spaceship.getBoardArray()[4 + 8 * i][4].setState(true);
+            spaceship.getBoardArray()[5 + 8 * i][3].setState(true);
+        }
+        spaceship.getBoardArray()[5][1].setState(true);
+        //the toad
+        spaceship.getBoardArray()[5][15].setState(true);
+        spaceship.getBoardArray()[6][15].setState(true);
+        spaceship.getBoardArray()[7][15].setState(true);
+        spaceship.getBoardArray()[6][16].setState(true);
+        spaceship.getBoardArray()[7][16].setState(true);
+        spaceship.getBoardArray()[8][16].setState(true);
+        //the figure eight
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                spaceship.getBoardArray()[20 + i][20 + j].setState(true);
+                spaceship.getBoardArray()[23 + i][23 + j].setState(true);
+            }
+        }
+        //creating diagonal
+        diagonal = new ConwayBoard();
+        for (int i = 10; i < 32; i++)
+        {
+            diagonal.getBoardArray()[i][i].setState(true);
+        }
+        diagonal.getBoardArray()[20][22].setState(true);
+        diagonal.getBoardArray()[22][20].setState(true);
+        //adding a clock
+        diagonal.getBoardArray()[11][2].setState(true);
+        diagonal.getBoardArray()[12][3].setState(true);
+        diagonal.getBoardArray()[12][4].setState(true);
+        diagonal.getBoardArray()[13][1].setState(true);
+        diagonal.getBoardArray()[13][2].setState(true);
+        diagonal.getBoardArray()[14][3].setState(true);
+        //adding a pre-pulsar
+        for (int i = 0; i < 2; i++)
+        {
+            diagonal.getBoardArray()[30 + 6 * i][7].setState(true);
+            diagonal.getBoardArray()[31 + 6 * i][7].setState(true);
+            diagonal.getBoardArray()[32 + 6 * i][7].setState(true);
+            diagonal.getBoardArray()[31 + 6 * i][6].setState(true);
+        }
+        //adding a pre-traffic light
+        diagonal.getBoardArray()[20][40].setState(true);
+        diagonal.getBoardArray()[21][40].setState(true);
+        diagonal.getBoardArray()[22][40].setState(true);
+        diagonal.getBoardArray()[21][39].setState(true);
+        //creating gun
+        gun = new ConwayBoard();
+        gun.getBoardArray()[0][4].setState(true);
+        gun.getBoardArray()[1][4].setState(true);
+        gun.getBoardArray()[0][5].setState(true);
+        gun.getBoardArray()[1][5].setState(true);
+        gun.getBoardArray()[35][2].setState(true);
+        gun.getBoardArray()[34][2].setState(true);
+        gun.getBoardArray()[35][3].setState(true);
+        gun.getBoardArray()[34][3].setState(true);
+        gun.getBoardArray()[12][2].setState(true);
+        gun.getBoardArray()[11][3].setState(true);
+        gun.getBoardArray()[10][4].setState(true);
+        gun.getBoardArray()[10][5].setState(true);
+        gun.getBoardArray()[10][6].setState(true);
+        gun.getBoardArray()[11][7].setState(true);
+        gun.getBoardArray()[12][8].setState(true);
+        gun.getBoardArray()[13][8].setState(true);
+        gun.getBoardArray()[15][7].setState(true);
+        gun.getBoardArray()[16][6].setState(true);
+        gun.getBoardArray()[17][5].setState(true);
+        gun.getBoardArray()[16][5].setState(true);
+        gun.getBoardArray()[14][5].setState(true);
+        gun.getBoardArray()[16][4].setState(true);
+        gun.getBoardArray()[15][3].setState(true);
+        gun.getBoardArray()[13][2].setState(true);
+        gun.getBoardArray()[24][0].setState(true);
+        gun.getBoardArray()[24][1].setState(true);
+        gun.getBoardArray()[22][1].setState(true);
+        gun.getBoardArray()[21][2].setState(true);
+        gun.getBoardArray()[20][2].setState(true);
+        gun.getBoardArray()[21][3].setState(true);
+        gun.getBoardArray()[20][3].setState(true);
+        gun.getBoardArray()[21][4].setState(true);
+        gun.getBoardArray()[20][4].setState(true);
+        gun.getBoardArray()[22][5].setState(true);
+        gun.getBoardArray()[24][5].setState(true);
+        gun.getBoardArray()[24][6].setState(true);
+        //creating the eater
+        gun.getBoardArray()[72][58].setState(true);
+        gun.getBoardArray()[73][58].setState(true);
+        gun.getBoardArray()[72][59].setState(true);
+        gun.getBoardArray()[74][59].setState(true);
+        gun.getBoardArray()[74][60].setState(true);
+        gun.getBoardArray()[74][61].setState(true);
+        gun.getBoardArray()[75][61].setState(true);
+        //a few blinkers for decoration
+        gun.getBoardArray()[20][50].setState(true);
+        gun.getBoardArray()[21][50].setState(true);
+        gun.getBoardArray()[22][50].setState(true);
+        gun.getBoardArray()[21][55].setState(true);
+        gun.getBoardArray()[21][56].setState(true);
+        gun.getBoardArray()[21][57].setState(true);
+        gun.getBoardArray()[20][62].setState(true);
+        gun.getBoardArray()[21][62].setState(true);
+        gun.getBoardArray()[22][62].setState(true);
+        //a beacon for decoration
+        gun.getBoardArray()[60][20].setState(true);
+        gun.getBoardArray()[61][20].setState(true);
+        gun.getBoardArray()[60][21].setState(true);
+        gun.getBoardArray()[63][22].setState(true);
+        gun.getBoardArray()[62][23].setState(true);
+        gun.getBoardArray()[63][23].setState(true);
+        //creating methuselah
+        methuselah = new ConwayBoard();
+        methuselah.getBoardArray()[30][31].setState(true);
+        methuselah.getBoardArray()[31][31].setState(true);
+        methuselah.getBoardArray()[31][30].setState(true);
+        methuselah.getBoardArray()[32][30].setState(true);
+        methuselah.getBoardArray()[31][32].setState(true);
+    }
+
+    /**
+     * Creates a new ConwayWindow object
+     *
+     * @param board the board that will store this window's data
+     */
+    public ConwayWindow(ConwayBoard board)
+    {
+        super("Conway's Game of Life Simulator");
+        //adding the "step" button
+        step = new Button("Step");
+        step.onClick(this, "stepClicked");
+        this.addButton(step, WindowSide.SOUTH);
+        //adding the "unpause" button
+        unpause = new Button("Unpause");
+        unpause.onClick(this, "unpauseClicked");
+        this.addButton(unpause, WindowSide.SOUTH);
+        //creating (but not adding) pause button
+        pause = new Button("Pause");
+        pause.onClick(this, "pauseClicked");
+        //creating reset button
+        reset = new Button("Reset");
+        reset.onClick(this, "resetClicked");
+        this.addButton(reset, WindowSide.SOUTH);
+        //creating change board button
+        changeBoard = new Button("Change Board");
+        changeBoard.onClick(this, "changeBoardClicked");
+        this.addButton(changeBoard, WindowSide.SOUTH);
+        //creating back button
+        back = new Button("Back");
+        back.onClick(this, "backClicked");
+        //creating all the board-changing buttons
+        blankButton = new Button("Blank");
+        blankButton.onClick(this, "blankClicked");
+        randomButton = new Button("Random");
+        randomButton.onClick(this, "randomClicked");
+        tenWideButton = new Button("Ten Wide");
+        tenWideButton.onClick(this, "tenWideClicked");
+        glidersButton = new Button("Gliders");
+        glidersButton.onClick(this, "glidersClicked");
+        spaceshipButton = new Button("Spaceships");
+        spaceshipButton.onClick(this, "spaceshipClicked");
+        diagonalButton = new Button("Diagonal");
+        diagonalButton.onClick(this, "diagonalClicked");
+        gunButton = new Button("Gun");
+        gunButton.onClick(this, "gunClicked");
+        methuselahButton = new Button("Methuselah");
+        methuselahButton.onClick(this, "methuselahClicked");
+        //initializing the board
+        this.board = board;
+        this.displayedBoard = board;
+        //this.originalBoard = board;
+        this.originalBoard = board.copy();
+    }
+
+    /**
+     * Returns the random field (100x100 square of evenly mixed
+     * 50% white and 50% black squares)
+     *
+     * @return the random field
+     */
+    public static ConwayBoard randomBoard()
+    {
+        return random;
+    }
+
+    /**
+     * Outputs a new randomly
+     * generated board (50% white and 50% black squares)
+     *
+     * @return a randomly generated board
+     */
+    private static ConwayBoard newRandom()
+    {
+        ConwayBoard newRandom = new ConwayBoard();
+        for (int i = 0; i < ConwayBoard.DEFAULT_WIDTH; i++)
+        {
+            for (int j = 0; j < ConwayBoard.DEFAULT_HEIGHT; j++)
+            {
+                Random rand = new Random();
+                boolean randBoolean = rand.nextBoolean();
+                newRandom.getBoardArray()[i][j].setState(randBoolean);
+            }
+        }
+        return newRandom;
+    }
+
+    /**
+     * Changes this class's board method
+     *
+     * @param newBoard the new board that this window will now use
+     */
+    public void setBoard(ConwayBoard newBoard)
+    {
+        this.board = newBoard;
+    }
+
+    /**
+     * Returns this class's board field
+     *
+     * @return the board that this window is using
+     */
+    public ConwayBoard board()
+    {
+        return board;
+    }
+
+    /**
+     * Displays the current board on the screen
+     */
+    public void displayBoard()
+    {
+        this.removeAllShapes();
+        //add each square in the board to the screen
+        for (int k = 0; k < displayedBoard.width(); k++)
+        {
+            for (int l = 0; l < displayedBoard.height(); l++)
+            {
+                ConwaySquare thisSquare = displayedBoard.getBoardArray()[k][l];
+                this.addShape(thisSquare);
+                thisSquare.onClick(this, "squareClicked");
+            }
+        }
+    }
+
+    /**
+     * Takes the array of SquareShapes displayed in the window and updates it
+     * according to the underlying board field. Only works if the displayBoard
+     * method has been called first
+     */
+    public void updateBoard()
+    {
+        for (int k = 0; k < board.width(); k++)
+        {
+            for (int l = 0; l < board.height(); l++)
+            {
+                ConwaySquare frontShape = displayedBoard.getBoardArray()[k][l];
+                // if any squares of displayedBoard do not match
+                // the corresponding square in board, change the color
+                if (frontShape.getState() !=
+                    board.getBoardArray()[k][l].getState())
+                {
+                    frontShape.switchState();
+                }
+            }
+        }
+    }
+
+    /**
+     * Displays the next generation of the current board
+     *
+     * @param step the step button that was clicked
+     */
+    public void stepClicked(Button step)
+    {
+        //the board before the tick
+        //ConwayBoard previous = board;
+        board = board.tick();
+        //board is now one generation ahead of where
+        //it was before the previous statement
+        this.updateBoard();
+        //this.displayBoard();
+    }
+
+    /**
+     * Unpauses the game until "pause" is clicked
+     *
+     * @param unpause the unpause button that was clicked
+     */
+    public void unpauseClicked(Button unpause)
+    {
+        //remove unpause, reset, step, and changeBoard buttons to avoid confusing the user
+        this.removeButton(unpause, WindowSide.SOUTH);
+        this.removeButton(step, WindowSide.SOUTH);
+        this.removeButton(reset, WindowSide.SOUTH);
+        this.removeButton(changeBoard, WindowSide.SOUTH);
+        //add pause button
+        this.addButton(pause, WindowSide.SOUTH);
+        //while the game is not paused, keep ticking the board forward with
+        //a short delay between ticks
+        thread = new ContinuallyTicking();
+        //tell the thread which board and which window it will be using
+        thread.setBoard(board);
+        thread.setWindow(this);
+        thread.start();
+    }
+
+    /**
+     * Pauses the game until "unpause" is clicked
+     *
+     * @param pause the pause button that was clicked
+     */
+    public void pauseClicked(Button pause)
+    {
+        thread.stopExecuting();
+        //remove pause button to avoid confusing the user
+        this.removeButton(pause, WindowSide.SOUTH);
+        //add unpause, reset, step, and changeBoard buttons
+        this.addButton(step, WindowSide.SOUTH);
+        this.addButton(unpause, WindowSide.SOUTH);
+        this.addButton(reset, WindowSide.SOUTH);
+        this.addButton(changeBoard, WindowSide.SOUTH);
+    }
+
+    /**
+     * Resets this window's board back to what it originally was
+     *
+     * @param reset the reset button that was clicked
+     */
+    public void resetClicked(Button reset)
+    {
+        board = originalBoard.copy();
+        this.updateBoard();
+    }
+
+    /**
+     * Displays all the buttons that allow the user to change
+     * the board, and hides all other buttons
+     *
+     * @param changeBoard the changeBoard button that was clicked
+     */
+    public void changeBoardClicked(Button changeBoard)
+    {
+        //remove unpause, reset, step, and changeBoard buttons to avoid confusing the user
+        this.removeButton(unpause, WindowSide.SOUTH);
+        this.removeButton(step, WindowSide.SOUTH);
+        this.removeButton(reset, WindowSide.SOUTH);
+        this.removeButton(changeBoard, WindowSide.SOUTH);
+        //add all the buttons for different board presets as well as back
+        this.addButton(back, WindowSide.SOUTH);
+        this.addButton(blankButton, WindowSide.SOUTH);
+        this.addButton(randomButton, WindowSide.SOUTH);
+        this.addButton(tenWideButton, WindowSide.SOUTH);
+        this.addButton(glidersButton, WindowSide.SOUTH);
+        this.addButton(spaceshipButton, WindowSide.SOUTH);
+        this.addButton(diagonalButton, WindowSide.SOUTH);
+        this.addButton(gunButton, WindowSide.SOUTH);
+        this.addButton(methuselahButton, WindowSide.SOUTH);
+    }
+
+    /**
+     * Takes the user back to the page with the step and pause buttons
+     *
+     * @param changeBoard the back button that was clicked
+     */
+    public void backClicked(Button back)
+    {
+        this.goBack();
+    }
+
+    /**
+     * Takes the user back to the page with the step and pause buttons
+     */
+    private void goBack()
+    {
+        //remove all the buttons for different board presets as well as back
+        this.removeButton(back, WindowSide.SOUTH);
+        this.removeButton(blankButton, WindowSide.SOUTH);
+        this.removeButton(randomButton, WindowSide.SOUTH);
+        this.removeButton(tenWideButton, WindowSide.SOUTH);
+        this.removeButton(glidersButton, WindowSide.SOUTH);
+        this.removeButton(spaceshipButton, WindowSide.SOUTH);
+        this.removeButton(diagonalButton, WindowSide.SOUTH);
+        this.removeButton(gunButton, WindowSide.SOUTH);
+        this.removeButton(methuselahButton, WindowSide.SOUTH);
+        //add unpause, reset, step, and changeBoard buttons
+        this.addButton(step, WindowSide.SOUTH);
+        this.addButton(unpause, WindowSide.SOUTH);
+        this.addButton(reset, WindowSide.SOUTH);
+        this.addButton(changeBoard, WindowSide.SOUTH);
+    }
+
+    /**
+     * Flips the state of this tile (from dead to alive or
+     * alive to dead) and also switches its color accordingly
+     */
+    public void squareClicked(ConwaySquare thisSquare)
+    {
+        boolean currState = thisSquare.getState();
+        //thisSquare.setState(!currState);
+        //thisSquare.updateColor();
+        //finding the location of this square in the array
+        //(not the screen!)
+        int x = thisSquare.getX();
+        int y = thisSquare.getY();
+        board.getBoardArray()[x][y].setState(!currState);
+        displayedBoard.getBoardArray()[x][y].setState(!currState);
+    }
+
+    /**
+     * changes the board to equal the corresponding preset, and
+     * then behaves as though back had been clicked
+     *
+     * @param clicked the button that was clicked
+     */
+    public void blankClicked(Button clicked)
+    {
+        this.setBoard(blank);
+        originalBoard = board.copy();
+        this.updateBoard();
+        this.goBack();
+    }
+
+    /**
+     * changes the board to equal the corresponding preset, and
+     * then behaves as though back had been clicked
+     *
+     * @param clicked the button that was clicked
+     */
+    public void randomClicked(Button clicked)
+    {
+        this.setBoard(ConwayWindow.newRandom());
+        originalBoard = board.copy();
+        this.updateBoard();
+        this.goBack();
+    }
+
+    /**
+     * changes the board to equal the corresponding preset, and
+     * then behaves as though back had been clicked
+     *
+     * @param clicked the button that was clicked
+     */
+    public void tenWideClicked(Button clicked)
+    {
+        this.setBoard(tenWide);
+        originalBoard = board.copy();
+        this.updateBoard();
+        this.goBack();
+    }
+
+    /**
+     * changes the board to equal the corresponding preset, and
+     * then behaves as though back had been clicked
+     *
+     * @param clicked the button that was clicked
+     */
+    public void glidersClicked(Button clicked)
+    {
+        this.setBoard(gliders);
+        originalBoard = board.copy();
+        this.updateBoard();
+        this.goBack();
+    }
+
+    /**
+     * changes the board to equal the corresponding preset, and
+     * then behaves as though back had been clicked
+     *
+     * @param clicked the button that was clicked
+     */
+    public void spaceshipClicked(Button clicked)
+    {
+        this.setBoard(spaceship);
+        originalBoard = board.copy();
+        this.updateBoard();
+        this.goBack();
+    }
+
+    /**
+     * changes the board to equal the corresponding preset, and
+     * then behaves as though back had been clicked
+     *
+     * @param clicked the button that was clicked
+     */
+    public void diagonalClicked(Button clicked)
+    {
+        this.setBoard(diagonal);
+        originalBoard = board.copy();
+        this.updateBoard();
+        this.goBack();
+    }
+
+    /**
+     * changes the board to equal the corresponding preset, and
+     * then behaves as though back had been clicked
+     *
+     * @param clicked the button that was clicked
+     */
+    public void gunClicked(Button clicked)
+    {
+        this.setBoard(gun);
+        originalBoard = board.copy();
+        this.updateBoard();
+        this.goBack();
+    }
+
+    /**
+     * changes the board to equal the corresponding preset, and
+     * then behaves as though back had been clicked
+     *
+     * @param clicked the button that was clicked
+     */
+    public void methuselahClicked(Button clicked)
+    {
+        this.setBoard(methuselah);
+        originalBoard = board.copy();
+        this.updateBoard();
+        this.goBack();
+    }
+
+}

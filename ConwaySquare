@@ -1,1 +1,203 @@
+package conwayGame;
 
+import java.awt.Color;
+import CS2114.SquareShape;
+
+/**
+ * A subclass of SquareShape that occupies a location in
+ * the ConwayBoard's 2D array
+ *
+ * @author Ken
+ *
+ */
+public class ConwaySquare extends SquareShape {
+
+    private boolean state;
+    private int arrayX;
+    private int arrayY;
+    private ConwayBoard board;
+
+    /**
+     * Behaves the same way as the superclass's constructor,
+     * but also associates itself with a board
+     *
+     * @param x x coordinate of this shape in the array
+     * @param y y coordinate of this shape in the array
+     * @param size side length of this shape
+     * @param color color of this shape (black or white)
+     * @param board the board to which this square belongs
+     */
+    public ConwaySquare(int x, int y, int size, Color color, ConwayBoard board)
+    {
+        //array x and y coordinates have to be converted to screen
+        //x and y coordinates
+        super(20 + ConwayWindow.SQUARE_SIZE * x,
+            20 + ConwayWindow.SQUARE_SIZE * y, size, color);
+        arrayX = x;
+        arrayY = y;
+        //set the state field according to the color
+        if (color == Color.black)
+        {
+            state = true;
+        }
+        else if (color == Color.white)
+        {
+            state = false;
+        }
+        else
+        {
+            throw new IllegalArgumentException();
+        }
+        //set the board to the correct value
+        this.board = board;
+    }
+
+    /**
+     * Creates and returns a copy of itself, which is assigned
+     * to a new board
+     *
+     * @param newBoard the board to which this copy will belong
+     * @return an exact deep copy of this object
+     */
+    public ConwaySquare copy(ConwayBoard newBoard)
+    {
+        return new ConwaySquare(this.getX(), this.getY(),
+            this.getHeight(), this.getBackgroundColor(),
+            newBoard);
+    }
+
+    /**
+     * Determines whether this tile is alive or dead
+     *
+     * @return true if alive; false if dead
+     */
+    public boolean getState()
+    {
+        return state;
+    }
+
+    /**
+     * Sets the state to the given value
+     *
+     * @param true to make the Tile alive; false to make it dead
+     */
+    public void setState(boolean state)
+    {
+        this.state = state;
+        this.updateColor();
+    }
+
+    /**
+     * Switches the state of this square to the opposite value
+     * (i.e. alive to dead and dead to alive)
+     */
+    public void switchState()
+    {
+        this.state = !this.state;
+        this.updateColor();
+    }
+
+    /**
+     * Finds the x location of this tile in the array
+     * (not the screen!)
+     *
+     * @return the x location of this tile in the array
+     */
+    public int getX()
+    {
+        return arrayX;
+    }
+
+    /**
+     * Finds the y location of this tile in the array
+     * (not the screen!)
+     *
+     * @return the y location of this tile in the array
+     */
+    public int getY()
+    {
+        return arrayY;
+    }
+
+    /**
+     * If the correspondingSquare's background color does not match the
+     * state, change the background color accordingly
+     */
+    public void updateColor()
+    {
+        //if state is true (alive) and square is not black:
+        if (state && this.getBackgroundColor() != Color.black)
+        {
+            this.setBackgroundColor(Color.black);
+        }
+        //if state is false (dead) and square is not white:
+        else if (!state && this.getBackgroundColor() != Color.white)
+        {
+            this.setBackgroundColor(Color.white);
+        }
+    }
+
+    /**
+     * Converts this Tile to a String
+     *
+     * @return "1" if alive, "0" if dead
+     */
+    public String toString()
+    {
+        if (state)
+        {
+            return "1";
+        }
+        else
+        {
+            return "0";
+        }
+    }
+
+    /**
+     * Obtains references to this squares 8 neighbors (horizontal, vertical,
+     * and diagonally adjacent squares), and stores them in a 1D array. If the
+     * square is in an edge or corner, it "wraps around" Pacman style and looks at
+     * the square on the opposite side of the board
+     *
+     * @return a 1D array of references to this squares's 8 neighbors
+     */
+    private ConwaySquare[] getNeighbors()
+    {
+        ConwaySquare[][] boardArray = this.board.getBoardArray();
+        int width = this.board.width();
+        int height = this.board.height();
+        //there should always be eight neighbors
+        ConwaySquare[] output = new ConwaySquare[8];
+        //filling output
+        output[0] = boardArray[(arrayX - 1 + width) % width][(arrayY - 1 + height) % height];
+        output[1] = boardArray[arrayX][(arrayY - 1 + height) % height];
+        output[2] = boardArray[(arrayX + 1) % width][(arrayY - 1 + height) % height];
+        output[3] = boardArray[(arrayX - 1 + width) % width][arrayY];
+        output[4] = boardArray[(arrayX + 1) % width][arrayY];
+        output[5] = boardArray[(arrayX - 1 + width) % width][(arrayY + 1) % height];
+        output[6] = boardArray[arrayX][(arrayY + 1) % height];
+        output[7] = boardArray[(arrayX + 1) % width][(arrayY + 1) % height];
+        return output;
+    }
+
+    /**
+     * Counts the number of alive neighbors this Tile has
+     *
+     * @return the number of neighbors that are alive
+     */
+    public int tallyAliveNeighbors()
+    {
+        ConwaySquare[] neighbors = this.getNeighbors();
+        int aliveNeighbors = 0;
+        for (int i = 0; i < neighbors.length; i++)
+        {
+            //if this neighbor is alive:
+            if (neighbors[i].getState())
+            {
+                aliveNeighbors++;
+            }
+        }
+        return aliveNeighbors;
+    }
+}

@@ -1,1 +1,69 @@
+/**
+ *
+ */
+package conwayGame;
 
+import java.lang.Thread;
+
+/**
+ * @author Ken
+ *
+ */
+public class ContinuallyTicking extends Thread {
+
+    private volatile boolean isExecuting;
+    private ConwayBoard board;
+    private ConwayWindow window;
+    private static final int TIME_DELAY = 0;
+
+    /**
+     * Creates a new ContinuallyTicking object
+     */
+    public ContinuallyTicking()
+    {
+        super();
+    }
+
+    /**
+     * Sets the value of the board field
+     *
+     * @param board the board that this program is operating on
+     */
+    public void setBoard(ConwayBoard board)
+    {
+        this.board = board;
+    }
+
+    /**
+     * Sets the value of the window field
+     *
+     * @param board the board that this program is operating on
+     */
+    public void setWindow(ConwayWindow window)
+    {
+        this.window = window;
+    }
+
+    public void run()
+    {
+        this.isExecuting = true;
+        while (this.isExecuting)
+        {
+            board = board.tick();
+            window.setBoard(board.tick());
+            window.updateBoard();
+            try {
+                Thread.sleep(TIME_DELAY);
+            }
+            catch (InterruptedException e) {
+                //left blank on purpose
+            }
+        }
+    }
+
+    public void stopExecuting()
+    {
+        this.isExecuting = false;
+    }
+
+}

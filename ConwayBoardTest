@@ -1,1 +1,86 @@
+package conwayGame;
 
+import junit.framework.TestCase;
+import java.util.Random;
+
+public class ConwayBoardTest extends TestCase {
+
+    private ConwayBoard horizontalStripeBoard;
+    private ConwayBoard blinker;
+    private ConwayBoard blinkerInCorner;
+    private ConwayBoard random;
+    private ConwayBoard largeRandom;
+
+    /***
+     * Runs before each test case
+     */
+    public void setUp()
+    {
+        //making horizontalStripeBoard
+        horizontalStripeBoard = new ConwayBoard(5, 5);
+        for (int i = 0; i < 5; i++)
+        {
+            horizontalStripeBoard.getBoardArray()[1][i].setState(true);
+            horizontalStripeBoard.getBoardArray()[3][i].setState(true);
+        }
+        //making blinker
+        blinker = new ConwayBoard(5, 5);
+        blinker.getBoardArray()[1][2].setState(true);
+        blinker.getBoardArray()[2][2].setState(true);
+        blinker.getBoardArray()[3][2].setState(true);
+        //making blinkerInCorner
+        blinkerInCorner = new ConwayBoard(5, 5);
+        blinkerInCorner.getBoardArray()[0][0].setState(true);
+        blinkerInCorner.getBoardArray()[1][0].setState(true);
+        blinkerInCorner.getBoardArray()[4][0].setState(true);
+        //making random
+        random = new ConwayBoard();
+        for (int i = 0; i < ConwayBoard.DEFAULT_WIDTH; i++)
+        {
+            for (int j = 0; j < ConwayBoard.DEFAULT_HEIGHT; j++)
+            {
+                Random rand = new Random();
+                random.getBoardArray()[i][j].setState(rand.nextBoolean());
+            }
+        }
+      //making largeRandom
+        largeRandom = new ConwayBoard(100, 100);
+        for (int i = 0; i < 100; i++)
+        {
+            for (int j = 0; j < 100; j++)
+            {
+                Random rand = new Random();
+                largeRandom.getBoardArray()[i][j].setState(rand.nextBoolean());;
+            }
+        }
+
+    }
+
+    /**
+     * Tests the toString method
+     */
+    public void testToString()
+    {
+        assertEquals("00000\n11111\n00000\n11111\n00000\n", horizontalStripeBoard.toString());
+    }
+
+    /**
+     * Tests the tick method on the blinker board
+     */
+    public void testBlinker()
+    {
+        assertEquals("00000\n00100\n00100\n00100\n00000\n", blinker.toString());
+        blinker = blinker.tick();
+        assertEquals("00000\n00000\n01110\n00000\n00000\n", blinker.toString());
+    }
+
+    /**
+     * Tests the tick method on the blinker board
+     */
+    public void testBlinkerInCorner()
+    {
+        assertEquals("10000\n10000\n00000\n00000\n10000\n", blinkerInCorner.toString());
+        blinkerInCorner = blinkerInCorner.tick();
+        assertEquals("11001\n00000\n00000\n00000\n00000\n", blinkerInCorner.toString());
+    }
+}
